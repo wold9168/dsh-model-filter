@@ -11,9 +11,8 @@ Model Filter Plugin for DeepSeek Harness (DSH)
 ## 功能
 
 1. **搜索框**：打开模型面板时在列表顶部显示搜索输入框
-2. **模糊匹配**：对模型名称和 ID 进行大小写不敏感的子串匹配
-3. **字符高亮**：匹配字符以品牌色高亮显示
-4. **ID 显示**：仅匹配到 ID 时，在模型名称后以小字显示 ID，匹配字符同样高亮
+2. **模糊匹配**：对模型名称、模型供应商和模型 ID 进行大小写不敏感的字符串匹配，帮助用户进行快速的模型选择
+3. **字符高亮**：匹配字符以高亮显示
 
 ## 安装
 
@@ -23,7 +22,7 @@ Model Filter Plugin for DeepSeek Harness (DSH)
 
 ```bash
 cd /path/to/deepseek-harness
-pnpm dsh plugin --profile web add https://github.com/<owner>/<repo>/releases/download/<tag>/dsh-model-filter.tgz
+pnpm dsh plugin --profile web add https://github.com/wold9168/dsh-model-filter/releases/download/<Version>/dsh-model-filter.tgz
 ```
 
 `dsh plugin add` 会自动检测 `dsh.bundle.patch` 声明并将插件加入 profile 的 bundles 列表。
@@ -46,14 +45,11 @@ pnpm dsh plugin --profile web add /path/to/dsh-model-filter
 
 ### 重启 DSH Web
 
-```bash
-kill $(pgrep -f "apps/cli/src/bin.ts web")
-cd /path/to/deepseek-harness && pnpm dsh web
-```
+安装完毕后请重启您的 DeepSeek Harness。
 
 ## 使用
 
-安装后，搜索框会自动出现在 composer 的模型选择下拉框中。点击模型选择器，选择 "Model" 进入模型列表，即可输入关键词过滤模型。
+安装后，搜索框会自动出现在模型选择下拉框中。点击模型选择器，即可输入关键词过滤模型。
 
 ## 工作原理
 
@@ -66,8 +62,8 @@ cd /path/to/deepseek-harness && pnpm dsh web
 ```bash
 # 1. 更新 package.json 版本号
 # 2. 打 tag 并推送
-git tag v0.1.0
-git push origin v0.1.0
+git tag <Version>
+git push origin <Version>
 ```
 
 Action 会在 CI 中 stub 掉 `link:../deepseek-harness` 的本地依赖（CI 没有 DSH checkout），执行 `pnpm install` + 构建，打包出包含 `lib/` 的 `dsh-model-filter.tgz`，上传到 GitHub Release。
