@@ -45,7 +45,7 @@ pnpm run build
 ### 3. 安装到 DSH profile
 
 ```bash
-cd ../deepseek-harness
+cd /path/to/deepseek-harness
 pnpm dsh plugin --profile web add /path/to/dsh-model-filter
 ```
 
@@ -55,7 +55,7 @@ pnpm dsh plugin --profile web add /path/to/dsh-model-filter
 
 ```bash
 kill $(pgrep -f "apps/cli/src/bin.ts web")
-cd ../deepseek-harness && pnpm dsh web
+cd /path/to/deepseek-harness && pnpm dsh web
 ```
 
 ## 使用
