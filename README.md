@@ -81,10 +81,7 @@ just install       # 安装依赖
 just build         # 构建
 just typecheck     # TypeScript 类型检查
 just pack          # 打包 tarball（含构建产物）
-just dev           # 完整开发循环：构建 + 重装到 profile + 重启 DSH Web
-just reinstall     # 仅重装插件到 profile
-just restart       # 仅重启 DSH Web
-just release v0.1.0  # 打 tag 并推送，触发 GitHub Action 发布
+just release <Version>  # 打 tag 并推送，触发 GitHub Action 发布
 ```
 
 手动命令等价于 `just dev`：
