@@ -21,6 +21,20 @@ export function apply(ctx: ClientContext): void {
       locale: 'model',
       inject: (sessionId): ModelSelectInjected => {
         const directory = models.directoryFor(sessionId)
+        // A hero session (no workspace picked yet) must not mount the model
+        // seat: loading the catalog here sends host RPCs and can raise a
+        // composer block (routable === false) that interferes with the
+        // workspace picker's connectWorkspace flow. Render null instead.
+        const summary = sessions.list.getSnapshot().byId[sessionId]
+        const hero = summary === undefined || summary.cwd === undefined || summary.cwd === ''
+        if (hero) {
+          return {
+            available: false,
+            directory: directory.store,
+            load: () => { /* no-op: hero session has no model catalog */ },
+            select: () => Promise.resolve(false),
+          }
+        }
         const available = sessions.subagentAddress(sessionId) === undefined
         return {
           available,

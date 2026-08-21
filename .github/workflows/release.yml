@@ -34,28 +34,23 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - name: Stub deepseek-harness for link: devDependencies
+      - name: "Stub deepseek-harness for link: devDependencies"
         run: |
           set -e
-          mkdir -p ../deepseek-harness
-          declare -A pkgs=(
-            [vendor/cordis]=@deepseek-ai/cordis
-            [vendor/loader]=@deepseek-ai/cordis-plugin-loader
-            [packages/api/remotes]=@deepseek-ai/dsh-api-remotes
-            [packages/client/locale]=@deepseek-ai/dsh-client-locale
-            [packages/client/runtime]=@deepseek-ai/dsh-client-runtime
-            [packages/client/ui-commands]=@deepseek-ai/dsh-client-ui-commands
-            [packages/client/ui-conversation]=@deepseek-ai/dsh-client-ui-conversation
-            [packages/client/ui-model-selection]=@deepseek-ai/dsh-client-ui-model-selection
-            [packages/client/ui-primitives]=@deepseek-ai/dsh-client-ui-primitives
-            [packages/client/ui-slots]=@deepseek-ai/dsh-client-ui-slots
-            [packages/runtime-diagnostics/invariants]=@deepseek-ai/dsh-invariants
-          )
-          for path in "${!pkgs[@]}"; do
-            mkdir -p "../deepseek-harness/$path"
-            printf '{"name":"%s","version":"0.0.0","type":"module"}\n' "${pkgs[$path]}" \
-              > "../deepseek-harness/$path/package.json"
-          done
+          node -e '
+            const fs = require("fs");
+            const path = require("path");
+            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            for (const [name, spec] of Object.entries(pkg.devDependencies || {})) {
+              if (!spec.startsWith("link:")) continue;
+              const target = spec.slice(5);
+              fs.mkdirSync(target, { recursive: true });
+              fs.writeFileSync(
+                path.join(target, "package.json"),
+                JSON.stringify({ name, version: "0.0.0", type: "module" }, null, 2) + "\n",
+              );
+            }
+          '
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

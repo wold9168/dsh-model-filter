@@ -74,15 +74,30 @@ Action 会在 CI 中 stub 掉 `link:../deepseek-harness` 的本地依赖（CI �
 
 ## 开发
 
-```bash
-# 安装依赖
-pnpm install
+常用操作已整合到 `justfile`，通过 `just` 运行（`just --list` 查看全部）：
 
-# 构建
-pnpm run build
+```bash
+just install       # 安装依赖
+just build         # 构建
+just typecheck     # TypeScript 类型检查
+just pack          # 打包 tarball（含构建产物）
+just dev           # 完整开发循环：构建 + 重装到 profile + 重启 DSH Web
+just reinstall     # 仅重装插件到 profile
+just restart       # 仅重启 DSH Web
+just release v0.1.0  # 打 tag 并推送，触发 GitHub Action 发布
 ```
 
-修改代码后需重新构建并重启 `dsh web`。也可使用 DSH 的动态 Cordis 插件机制进行快速测试，无需构建和重启。
+手动命令等价于 `just dev`：
+
+```bash
+pnpm run build
+cd /path/to/deepseek-harness
+pnpm dsh plugin --profile web remove dsh-model-filter
+pnpm dsh plugin --profile web add ../dsh-model-filter
+pnpm dsh web
+```
+
+修改代码后执行 `just dev` 即可完成构建 + 重装 + 重启。也可使用 DSH 的动态 Cordis 插件机制进行快速测试，无需构建和重启。
 
 ## License
 
