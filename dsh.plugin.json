@@ -1,0 +1,12 @@
+{
+  "name": "dsh-model-filter",
+  "description": "Model filter plugin: adds search box to model selection with fuzzy search and highlighting",
+  "version": "0.1.0",
+  "entry": {
+    "name": "dsh-model-filter",
+    "inject": []
+  },
+  "client": {
+    "platform": "web"
+  }
+}
