@@ -136,6 +136,7 @@ export function ModelSelect(
     fn => directory.subscribe(fn),
     () => directory.getSnapshot(),
   )
+  console.log('[dsh-model-filter] groups:', state.groups.map(g => `${g.id}(${g.models.length})`), 'status:', state.status)
   const [open, setOpen] = useState(false)
   const [pane, setPane] = useState<Pane>('root')
   const [searchQuery, setSearchQuery] = useState('')

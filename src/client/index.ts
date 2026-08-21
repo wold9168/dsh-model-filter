@@ -17,17 +17,20 @@ export function apply(ctx: ClientContext): void {
 
     // Refresh the current session's shared directory store when settings or
     // adapters change, so the composer-seat model list stays current without
-    // reopening the menu. The ModelDirectoryResolver already refreshes its own
-    // live map; this guarantees the active session is covered too.
+    // reopening the menu. Hero sessions (no workspace) are skipped: loading
+    // their catalog sends host RPCs and can raise a composer block that
+    // interferes with the workspace picker.
     const refreshCurrent = (): void => {
       const current = sessions.list.getSnapshot().current
       if (current === undefined) return
+      const summary = sessions.list.getSnapshot().byId[current]
+      if (summary === undefined || summary.cwd === undefined || summary.cwd === '') return
       try {
         const directory = models.directoryFor(current)
         directory.load().catch(() => { /* surfaced on the store */ })
       } catch { /* session scope not resolvable yet */ }
     }
-    scope.effect(() => {
+    ctx.effect(() => {
       const offSettings = ctx.remote.$on('settings/document-updated', refreshCurrent)
       const offAdapters = ctx.remote.$on('llm/adapters-updated', refreshCurrent)
       return () => {
