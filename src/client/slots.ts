@@ -1,10 +1,10 @@
 /**
  * Injected props for the enhanced ModelSelect component.
  */
-import type { ModelSelection, ModelProviderGroup, ModelCatalogFailure, SessionModels } from '@deepseek-ai/dsh-api-remotes/client'
+import type { ModelSelection, ModelProviderGroup, ModelCatalogFailure } from '@deepseek-ai/dsh-api-remotes/client'
 import type { SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 
-/** Directory snapshot both entries render from. */
+/** Directory snapshot the model seat renders from. */
 export interface ModelDirectoryState {
   /** Model selection the host reports for the next assembled step; null before the first load. */
   current: ModelSelection | null
@@ -20,26 +20,12 @@ export interface ModelDirectoryState {
   error: string | null
 }
 
-/** The shared directory controller interface. */
-export interface ModelDirectory {
-  /** The shared snapshot both entries render from (uSES-safe store). */
-  readonly store: SnapshotStore<ModelDirectoryState>
-  /** Refresh the advisory directory. */
-  load(): Promise<SessionModels>
-  /** Select the complete provider/model/reasoning selection. */
-  select(selection: ModelSelection): Promise<void>
-  /** Drop the previous Host generation's projection and repull it. */
-  resetConnected(): void
-  /** Scope teardown. */
-  dispose(): void
-}
-
 /** Props injected into the ModelSelect component. */
 export interface ModelSelectInjected {
   /** Whether the model directory is available for this session. */
   available: boolean
-  /** The shared model directory controller. */
-  directory: ModelDirectory
+  /** The session's shared directory store (same instance the /model popup reads). */
+  directory: SnapshotStore<ModelDirectoryState>
   /** Trigger a directory reload. */
   load(): void
   /** Submit a model selection. Returns true if accepted. */

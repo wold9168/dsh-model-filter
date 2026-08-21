@@ -42,7 +42,8 @@
   },
   "scripts": {
     "build": "node build.mjs",
-    "bundle": "node build.mjs"
+    "bundle": "node build.mjs",
+    "typecheck": "tsc --noEmit"
   },
   "license": "MIT",
   "peerDependencies": {

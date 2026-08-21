@@ -8,12 +8,33 @@ import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import type { ModelSelectInjected } from './slots.js'
 import { ModelSelect } from './ModelSelect.js'
 
-export const inject = ['slots', 'sessions', 'modelDirectories']
+export const inject = ['slots', 'sessions', 'modelDirectories', 'remote']
 
 export function apply(ctx: ClientContext): void {
   ctx.inject(['slots', 'modelDirectories'], (scope) => {
     const models = scope.modelDirectories
     const sessions = scope.sessions
+
+    // Refresh the current session's shared directory store when settings or
+    // adapters change, so the composer-seat model list stays current without
+    // reopening the menu. The ModelDirectoryResolver already refreshes its own
+    // live map; this guarantees the active session is covered too.
+    const refreshCurrent = (): void => {
+      const current = sessions.list.getSnapshot().current
+      if (current === undefined) return
+      try {
+        const directory = models.directoryFor(current)
+        directory.load().catch(() => { /* surfaced on the store */ })
+      } catch { /* session scope not resolvable yet */ }
+    }
+    scope.effect(() => {
+      const offSettings = ctx.remote.$on('settings/document-updated', refreshCurrent)
+      const offAdapters = ctx.remote.$on('llm/adapters-updated', refreshCurrent)
+      return () => {
+        offSettings()
+        offAdapters()
+      }
+    }, 'dsh-model-filter: catalog refresh')
 
     scope.slots.inject('conversation.input.model', () => scope.slots.register({
       name: 'conversation.input.model',
