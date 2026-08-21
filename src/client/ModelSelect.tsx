@@ -384,11 +384,11 @@ export function ModelSelect(
                 <Input
                   ref={searchInputRef}
                   type="search"
-                  placeholder={t('search.placeholder')}
+                  placeholder="请输入要搜索的模型"
                   value={searchQuery}
                   onChange={onSearchChange}
                   className={css.searchInput}
-                  aria-label={t('search.ariaLabel')}
+                  aria-label="搜索模型"
                 />
                 <IconSearchOutline16 className={css.searchIcon} />
               </div>
@@ -408,7 +408,7 @@ export function ModelSelect(
                 </div>
               ))}
               {noResults && (
-                <div className={css.empty}>{t('empty.search', { query: searchQuery })}</div>
+                <div className={css.empty}>{`未找到匹配 "${searchQuery}" 的模型`}</div>
               )}
               {(hasSearchResults || (!searchQuery && state.status === 'ready')) && (
                 <div className={clsx(css.groups, 'scrollable')}>
