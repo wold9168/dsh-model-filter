@@ -1,0 +1,82 @@
+# Build lib/, pack a tarball, and publish it as a GitHub Release.
+# Triggered by pushing a `v*` tag (e.g. `git tag v0.1.0 && git push --tags`).
+#
+# The devDependencies use `link:../deepseek-harness/...` which only exists in
+# the local dev checkout.  CI has no deepseek-harness, so this workflow stubs
+# the linked directories (each with a package.json whose name matches) before
+# `pnpm install`, then builds and packs the built artifacts.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Stub deepseek-harness for link: devDependencies
+        run: |
+          set -e
+          mkdir -p ../deepseek-harness
+          declare -A pkgs=(
+            [vendor/cordis]=@deepseek-ai/cordis
+            [vendor/loader]=@deepseek-ai/cordis-plugin-loader
+            [packages/api/remotes]=@deepseek-ai/dsh-api-remotes
+            [packages/client/locale]=@deepseek-ai/dsh-client-locale
+            [packages/client/runtime]=@deepseek-ai/dsh-client-runtime
+            [packages/client/ui-commands]=@deepseek-ai/dsh-client-ui-commands
+            [packages/client/ui-conversation]=@deepseek-ai/dsh-client-ui-conversation
+            [packages/client/ui-model-selection]=@deepseek-ai/dsh-client-ui-model-selection
+            [packages/client/ui-primitives]=@deepseek-ai/dsh-client-ui-primitives
+            [packages/client/ui-slots]=@deepseek-ai/dsh-client-ui-slots
+            [packages/runtime-diagnostics/invariants]=@deepseek-ai/dsh-invariants
+          )
+          for path in "${!pkgs[@]}"; do
+            mkdir -p "../deepseek-harness/$path"
+            printf '{"name":"%s","version":"0.0.0","type":"module"}\n' "${pkgs[$path]}" \
+              > "../deepseek-harness/$path/package.json"
+          done
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: node build.mjs
+
+      - name: Pack tarball
+        run: |
+          set -e
+          rm -rf package dsh-model-filter.tgz
+          mkdir -p package
+          cp package.json cordis.patch.yml dsh.plugin.json README.md LICENSE package/
+          cp -r lib package/lib
+          tar -czf dsh-model-filter.tgz package
+          tar -tzf dsh-model-filter.tgz | head
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dsh-model-filter.tgz \
+            --repo "${{ github.repository }}" \
+            --generate-notes

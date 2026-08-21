@@ -17,41 +17,34 @@ Model Filter Plugin for DeepSeek Harness (DSH)
 
 ## 安装
 
-### 前置条件
+### 方式一：从 GitHub Release 远程安装（推荐）
 
-- 已有 DSH checkout（默认位于 `../deepseek-harness`）
-- pnpm
-
-### 1. 安装依赖
-
-`devDependencies` 使用 `link:` 协议指向 DSH checkout 中的包，`pnpm install` 自动创建所有 symlink：
-
-```bash
-pnpm install
-```
-
-### 2. 构建
-
-构建产物不提交至仓库，clone 后必须执行：
-
-```bash
-pnpm run build
-```
-
-产物：
-- `lib/index.js` — Host 端 ESM
-- `lib/client.js` — Client 端 CJS（ModuleLoader 包装）
-
-### 3. 安装到 DSH profile
+无需拉取本仓库到本地。直接从 GitHub Release 产物安装：
 
 ```bash
 cd /path/to/deepseek-harness
-pnpm dsh plugin --profile web add /path/to/dsh-model-filter
+pnpm dsh plugin --profile web add https://github.com/<owner>/<repo>/releases/download/<tag>/dsh-model-filter.tgz
 ```
 
 `dsh plugin add` 会自动检测 `dsh.bundle.patch` 声明并将插件加入 profile 的 bundles 列表。
 
-### 4. 重启 DSH Web
+### 方式二：本地构建安装
+
+需要 DSH checkout（默认位于 `../deepseek-harness`）与 pnpm。
+
+```bash
+# 1. 安装依赖（devDependencies 使用 link: 协议指向 DSH checkout）
+pnpm install
+
+# 2. 构建（lib/ 不提交至仓库，clone 后必须构建）
+pnpm run build
+
+# 3. 安装到 DSH profile
+cd /path/to/deepseek-harness
+pnpm dsh plugin --profile web add /path/to/dsh-model-filter
+```
+
+### 重启 DSH Web
 
 ```bash
 kill $(pgrep -f "apps/cli/src/bin.ts web")
@@ -64,7 +57,20 @@ cd /path/to/deepseek-harness && pnpm dsh web
 
 ## 工作原理
 
-插件通过 Cordis 机制向 DSH 的 `modelSelect` 服务提供一个增强的 `ModelSelect` 组件（服务名 `model-select-enhanced`）。增强组件在原有模型选择面板的基础上增加了搜索输入框和实时过滤功能。
+插件在 Client 端注册 `conversation.input.model` slot（`priority: -1` 覆盖默认的 `ui-model-selection` 组件），提供一个带搜索框的增强版 `ModelSelect`。搜索通过 `modelDirectories` 服务获取会话的模型目录（按 provider 分组的模型列表），在前端按 provider 名、模型名、模型 ID 过滤并高亮匹配字符。
+
+## 发布新版本
+
+推送 `v*` tag 会自动触发 GitHub Action（`.github/workflows/release.yml`）构建、打包并创建 Release 产物：
+
+```bash
+# 1. 更新 package.json 版本号
+# 2. 打 tag 并推送
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Action 会在 CI 中 stub 掉 `link:../deepseek-harness` 的本地依赖（CI 没有 DSH checkout），执行 `pnpm install` + 构建，打包出包含 `lib/` 的 `dsh-model-filter.tgz`，上传到 GitHub Release。
 
 ## 开发
 

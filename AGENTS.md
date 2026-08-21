@@ -64,9 +64,8 @@ dsh-model-filter/
 │       ├── slots.ts           # 组件注入接口类型
 │       └── locales.ts         # 中英文词典
 └── lib/                       # 构建产物（gitignored）
-    ├── index.js               # Host 端自包含 ESM
-    ├── client.js              # Client 端 CJS（ModuleLoader 包装）
-    └── *.mjs                  # 代码分割出的语法高亮 chunk
+    ├── index.js               # Host 端自包含 ESM（bundle 全部 DSH 包，CSS 剥离）
+    └── client.js              # Client 端 CJS（ModuleLoader 包装，CSS 内联）
 ```
 
 ## 构建系统
@@ -92,7 +91,7 @@ dsh-model-filter/
 pnpm run build
 
 # 产物：
-#   lib/index.js   — Host 端 ESM (~18 KB，DSH 包外部化)
+#   lib/index.js   — Host 端自包含 ESM (~4.9 MB，bundle 全部 DSH 包，CSS 剥离)
 #   lib/client.js  — Client 端 CJS (~29 KB，CSS 内联)
 ```
 
@@ -101,26 +100,37 @@ pnpm run build
 **Client bundle：**
 - `format: 'cjs'` — DSH 客户端模块系统要求 CJS
 - `banner/footer` — 包装在 `window.__ModuleLoader__.load({ id, factory })` 中
-- `external: ['@deepseek-ai/*', 'react', ...]` — 平台模块保持外部
+- `external: ['@deepseek-ai/*', 'react', ...]` — 平台模块保持外部（浏览器运行时提供）
 - CSS Modules 通过 `inline-css-modules` 插件处理：内联 CSS 文本 + 注入 `<style>` 标签 + 导出类名映射
 
 **Host bundle：**
 - `format: 'esm'` — Node.js 端 ESM
-- `external: ['@deepseek-ai/*', 'react', ...]` — DSH 包和 React 外部化
+- `external: ['node:*']` — 仅外部化 Node 内置模块，DSH 包全部 bundle（避免运行时加载 .css 报错）
 - CSS 通过 `strip-css` 插件剥离（`→ export default {}`）
 
 ## 安装与测试
 
-### 安装到 DSH profile
+### 从 GitHub Release 远程安装（推荐）
+
+无需拉取仓库到本地：
 
 ```bash
-# 方式 1：使用 dsh CLI（推荐）
+cd $DSH_CHECKOUT
+pnpm dsh plugin --profile web add https://github.com/<owner>/<repo>/releases/download/<tag>/dsh-model-filter.tgz
+```
+
+### 本地构建安装
+
+```bash
+# 1. 安装依赖（link: 协议指向 ../deepseek-harness）
+pnpm install
+
+# 2. 构建（lib/ gitignored，clone 后必须构建）
+pnpm run build
+
+# 3. 安装到 DSH profile
 cd $DSH_CHECKOUT
 pnpm dsh plugin --profile web add /path/to/dsh-model-filter
-
-# 方式 2：手动 pnpm
-cd ~/.dsh/profiles/web
-pnpm add /path/to/dsh-model-filter
 ```
 
 `dsh plugin add` 会自动检测 `dsh.bundle.patch` 声明并将插件加入 `dsh.profile.bundles` 列表。
