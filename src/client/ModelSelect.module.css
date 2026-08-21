@@ -229,10 +229,11 @@
   white-space: nowrap;
 }
 
-/* Highlighted matching characters — no padding to avoid disrupting kerning. */
+/* Highlighted matching characters — translucent brand tint so the label
+   stays readable on both light and dark themes. */
 .highlight {
-  background: var(--dsw-alias-brand-primary);
-  color: var(--dsw-alias-brand-on-primary);
+  color: var(--dsw-alias-label-primary);
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 22%, transparent);
   border-radius: 2px;
 }
 
@@ -252,8 +253,8 @@
 }
 
 .modelId .highlight {
-  background: var(--dsw-alias-brand-primary);
-  color: var(--dsw-alias-brand-on-primary);
+  color: var(--dsw-alias-label-primary);
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 22%, transparent);
   border-radius: 2px;
 }
 

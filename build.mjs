@@ -4,8 +4,9 @@
  * The web server serves exactly one file per plugin
  * (/plugins/dsh-model-filter/client.js), so the client half is one CJS
  * bundle wrapped in the ModuleLoader factory handshake; @deepseek-ai/dsh-*
- * and react stay external. The host half is plain ESM for Node,
- * externalizing @deepseek-ai/* plus react.
+ * and react stay external. The host half is a self-contained ESM bundle
+ * (DSH packages are bundled, CSS is stripped) so Node.js never encounters
+ * .css imports from DSH packages at runtime.
  */
 import { build } from 'esbuild'
 import { readFileSync, mkdirSync } from 'node:fs'
@@ -14,7 +15,7 @@ import { resolve } from 'node:path'
 mkdirSync('lib', { recursive: true })
 
 const PLUGIN_ID = 'dsh-model-filter'
-const dshExternal = ['@deepseek-ai/*', 'react', 'react/jsx-runtime', 'react-dom', 'scheduler']
+const clientExternal = ['@deepseek-ai/*', 'react', 'react/jsx-runtime', 'react-dom', 'scheduler']
 
 /**
  * Plugin that strips CSS imports for the Node host bundle.
@@ -75,7 +76,7 @@ await build({
   platform: 'node',
   target: ['node22'],
   sourcemap: true,
-  external: dshExternal,
+  external: ['node:*'],
   plugins: [stripCssPlugin],
   logLevel: 'info',
 })
@@ -89,7 +90,7 @@ await build({
   target: ['es2022'],
   sourcemap: true,
   jsx: 'automatic',
-  external: dshExternal,
+  external: clientExternal,
   plugins: [inlineCssModulesPlugin],
   banner: {
     js: "window.__ModuleLoader__.load({ id: 'dsh-model-filter', factory: (require) => { var module = { exports: {} }; var exports = module.exports;",

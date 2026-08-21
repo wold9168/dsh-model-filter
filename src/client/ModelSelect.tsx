@@ -55,10 +55,15 @@ function highlightMatches(text: string, query: string): Array<{ text: string; hi
       if (textIndex > segmentStart) {
         segments.push({ text: text.slice(segmentStart, textIndex), highlight: false })
       }
-      // Add the matching character
-      segments.push({ text: text[textIndex], highlight: true })
-      textIndex++
-      queryIndex++
+      // Group consecutive matching characters into ONE highlighted segment
+      // so the background is a contiguous block (no per-character gaps).
+      const matchStart = textIndex
+      while (textIndex < text.length && queryIndex < lowerQuery.length &&
+             lowerText[textIndex] === lowerQuery[queryIndex]) {
+        textIndex++
+        queryIndex++
+      }
+      segments.push({ text: text.slice(matchStart, textIndex), highlight: true })
       segmentStart = textIndex
     } else {
       textIndex++
@@ -94,7 +99,7 @@ function HighlightedText({ segments }: { segments: Array<{ text: string; highlig
 }
 
 /**
- * Filter models by fuzzy search query against name and id.
+ * Filter models by fuzzy search query against provider name/id, model name, and model id.
  */
 function filterModels(groups: readonly ModelProviderGroup[], query: string): ModelProviderGroup[] {
   if (!query) return [...groups]
@@ -103,10 +108,15 @@ function filterModels(groups: readonly ModelProviderGroup[], query: string): Mod
 
   return groups
     .map(group => {
-      const filteredModels = group.models.filter(model =>
-        model.name.toLowerCase().includes(lowerQuery) ||
-        model.id.toLowerCase().includes(lowerQuery)
-      )
+      // A provider/group name match shows all its models.
+      const groupMatches = group.name.toLowerCase().includes(lowerQuery) ||
+        group.id.toLowerCase().includes(lowerQuery)
+      const filteredModels = groupMatches
+        ? group.models
+        : group.models.filter(model =>
+            model.name.toLowerCase().includes(lowerQuery) ||
+            model.id.toLowerCase().includes(lowerQuery)
+          )
       if (filteredModels.length === 0) return null
       return { ...group, models: filteredModels }
     })
@@ -400,13 +410,15 @@ export function ModelSelect(
               {noResults && (
                 <div className={css.empty}>{t('empty.search', { query: searchQuery })}</div>
               )}
-              {hasSearchResults || (!searchQuery && state.status === 'ready') && (
+              {(hasSearchResults || (!searchQuery && state.status === 'ready')) && (
                 <div className={clsx(css.groups, 'scrollable')}>
                   {filteredGroups.map((group) => {
                     const headingId = `${id}-${group.id}`
                     return (
                       <section role="group" aria-labelledby={headingId} className={css.group} key={group.id}>
-                        <div className={css.groupTitle} id={headingId}>{group.name}</div>
+                        <div className={css.groupTitle} id={headingId}>
+                          <HighlightedText segments={highlightMatches(group.name, searchQuery)} />
+                        </div>
                         {group.models.map((model) => {
                           const selected = state.current?.provider === group.id && state.current.model === model.id
                           const nameSegments = highlightMatches(model.name, searchQuery)

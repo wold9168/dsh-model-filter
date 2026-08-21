@@ -1,14 +1,18 @@
 /**
- * Model Filter Plugin
- * 
- * This plugin enhances the model selection with a search box that allows
- * fuzzy searching by model name or ID, with highlighted matching characters.
+ * Model Filter Plugin — Host entry.
+ *
+ * Enhances the model selection dropdown with a search box.
+ * The Host half is minimal; the Client half registers in the
+ * `conversation.input.model` slot directly.
  */
 import type { Context } from '@deepseek-ai/cordis'
-import { ModelSelect } from './client/ModelSelect.js'
+
+export const name = 'dsh-model-filter'
 
 export interface ModelFilterConfig {}
 
-export function apply(ctx: Context, _config: ModelFilterConfig) {
-  ctx.provide('model-select-enhanced', ModelSelect)
+export function apply(_ctx: Context, _config: ModelFilterConfig) {
+  // Slot registration and UI are handled by the Client half.
 }
+
+export default apply

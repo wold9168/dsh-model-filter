@@ -1,14 +1,4 @@
 # dsh-model-filter bundle layer: insert the model-filter plugin row.
 - insert:
     - id: dsh-model-filter
-      name: 'dsh-model-filter'
-      config: {}
-      inject:
-        required:
-          - locale
-          - runtime
-          - commandUi
-          - remote
-          - remote.commands
-        optional:
-          - modelSelect
+      name: dsh-model-filter
